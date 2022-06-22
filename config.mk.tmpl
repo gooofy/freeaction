@@ -1,0 +1,36 @@
+#
+# copy/rename this to config.mk, customize to match your local setup
+#
+
+SHELL := /bin/bash
+
+SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+
+EMUHDD = /home/guenter/media/emu/amiga/FS-UAE/hdd/system
+
+WORKDIR = x
+EMUDIR  = $(EMUHDD)/$(WORKDIR)
+
+#
+# Amiga OS toolchain related config
+#
+
+OBJDIR_AMIGAOS = $(SELF_DIR)/target/m68k-amigaos/obj
+BINDIR_AMIGAOS = $(SELF_DIR)/target/m68k-amigaos/bin
+DEPDIR_AMIGAOS = $(SELF_DIR)/target/m68k-amigaos/.deps
+
+# CFLAGS_AMIGAOS   = -O3 -Wall -Werror -march=68000 -mcpu=68000 -mcrt=nix20
+CFLAGS_AMIGAOS   = -O3 -Wall -Werror -march=68000 -mcpu=68000 -mcrt=nix20 -I$(SELF_DIR)/src/amigasupport
+DEPFLAGS_AMIGAOS = -MT $@ -MMD -MP -MF $(DEPDIR_AMIGAOS)/$*.d
+ASFLAGS_AMIGAOS  = -march=68000 -mcpu=68000
+LDFLAGS_AMIGAOS  = -lm
+
+TOOLCHAIN_AMIGAOS_PREFIX = /home/guenter/projects/amiga/amiga-gcc
+
+CC_AMIGAOS      = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-gcc
+AS_AMIGAOS      = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-as
+LD_AMIGAOS      = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-ld
+AR_AMIGAOS      = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-ar
+STRIP_AMIGAOS   = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-strip
+OBJDUMP_AMIGAOS = $(TOOLCHAIN_AMIGAOS_PREFIX)/bin/m68k-amigaos-objdump
+

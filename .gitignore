@@ -51,3 +51,6 @@
 .tmp_versions/
 
 others
+config.mk
+target
+
