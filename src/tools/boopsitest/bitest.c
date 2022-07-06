@@ -47,12 +47,8 @@ static struct IClass *mybutton_class  = NULL;
 
 struct mybutton_data
 {
-		UWORD gad_x;
-		UWORD gad_y;
-		UWORD gad_w;
-		UWORD gad_h;
-//		struct button button[4];
-		WORD active_button;
+		UWORD mid_x;
+		UWORD mid_y;
 };
 
 void _debug_putc (char c)
@@ -74,6 +70,9 @@ void cleanexit(char *msg)
     if (w)
         CloseWindow(w);
 
+	if (mybutton_class)
+		FreeClass(mybutton_class);
+
     if (DOSBase)
         CloseLibrary((struct Library*)DOSBase);
     if (IntuitionBase)
@@ -90,10 +89,23 @@ static __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o,
 
 	switch (msg->MethodID)
 	{
-#if 0
 	case OM_NEW:
-		retval = gui_new (cl,(Object *)o,(struct opSet *)msg);
+	{
+		DPRINTF ("_mybutton_dispatcher: OM_NEW\n");
+		Object *object;
+		if ( (object = (Object *)DoSuperMethodA(cl, (Object *)o, msg)) )
+		{
+			struct Gadget *g = (struct Gadget *)object;
+
+			struct mybutton_data *inst = INST_DATA(cl, object);
+			inst->mid_x  = g->LeftEdge + ( (g->Width) / 2);
+			inst->mid_y  = g->TopEdge + ( (g->Height) / 2);
+
+			retval = (ULONG)object;
+		}
 		break;
+	}
+#if 0
 	case OM_DISPOSE:
 		retval = gui_dispose (cl,o,msg);
 		break;
@@ -107,9 +119,73 @@ static __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o,
 	case GM_LAYOUT:
 		retval = gui_layout (cl,o,(struct gpLayout *)msg);
 		break;
+#endif
 	case GM_RENDER:
-		retval = gui_render (cl,o,(struct gpRender *)msg);
+	{
+		DPRINTF ("_mybutton_dispatcher: GM_RENDER\n");
+		struct Gadget *g = o;
+		struct mybutton_data *inst = INST_DATA(cl, o);
+
+		struct RastPort *rp;
+		retval = TRUE;
+		UWORD *pens = msg->gpr_GInfo->gi_DrInfo->dri_Pens;
+
+		rp = msg->gpr_RPort;
+
+		if (rp)
+		{
+			UWORD back, shine, shadow, w, h, x, y;
+
+			if (g->Flags & GFLG_SELECTED)
+			{
+				back   = pens[FILLPEN];
+				shine  = pens[SHADOWPEN];
+				shadow = pens[SHINEPEN];
+			}
+			else
+			{
+				back   = pens[BACKGROUNDPEN];
+				shine  = pens[SHINEPEN];
+				shadow = pens[SHADOWPEN];
+			}
+			SetDrMd(rp, JAM1);
+
+			SetAPen(rp, back);
+			RectFill(rp, g->LeftEdge,
+						 g->TopEdge,
+						 g->LeftEdge + g->Width,
+						 g->TopEdge + g->Height);
+
+			SetAPen(rp, shadow);
+			Move(rp, g->LeftEdge + 1, g->TopEdge + g->Height);
+			Draw(rp, g->LeftEdge + g->Width, g->TopEdge + g->Height);
+			Draw(rp, g->LeftEdge + g->Width, g->TopEdge + 1);
+
+			w = g->Width / 4;
+			h = g->Height / 2;
+			x = g->LeftEdge + (w/2);
+			y = g->TopEdge + (h/2);
+
+			Move(rp, x, inst->midY);
+			Draw(rp, x + w, y);
+			Draw(rp, x + w, y + (g->Height) - h);
+			Draw(rp, x, inst->midY);
+
+			x = g->LeftEdge + (w/2) + g->Width / 2;
+
+			Move(rp, x + w, inst->midY);
+			Draw(rp, x, y);
+			Draw(rp, x, y  + (g->Height) - h);
+			Draw(rp, x + w, inst->midY);
+
+			SetAPen(rp, shine);
+			Move(rp, g->LeftEdge, g->TopEdge + g->Height - 1);
+			Draw(rp, g->LeftEdge, g->TopEdge);
+			Draw(rp, g->LeftEdge + g->Width - 1, g->TopEdge);
+		}
 		break;
+	}
+#if 0
 	case GM_HITTEST:
 		retval = gui_hittest (cl,o,(struct gpHitTest *)msg);
 		break;
