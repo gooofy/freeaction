@@ -1,6 +1,6 @@
 include ../../../config.mk
 
-CFLAGS_AMIGAOS2   = -O3 -march=68000 -mcpu=68000 -mcrt=nix20 -I$(SELF_DIR)/src/amigasupport
+CFLAGS_AMIGAOS2   = -O3 -march=68000 -mcpu=68000 -mcrt=nix20 -fbaserel -I$(SELF_DIR)/src/amigasupport
 
 SRCS = 	bitest.c dprintf.c
 
