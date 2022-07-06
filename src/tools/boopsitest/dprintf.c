@@ -1,4 +1,4 @@
-#include "ratest.h"
+#include "bitest.h"
 
 #ifdef ENABLE_DPRINTF
 

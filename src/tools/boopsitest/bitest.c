@@ -1,7 +1,10 @@
 #include "dprintf.h"
 
-#include <exec/types.h>
-#include <clib/exec_protos.h>
+#include <stdlib.h>
+
+#include <proto/alib.h>
+
+#include <proto/exec.h>
 #include <inline/exec.h>
 
 #include <intuition/intuition.h>
@@ -28,6 +31,13 @@
 #define MINWINDOWHEIGHT     (PROPGADGETHEIGHT + 70)
 #define MAXCHARS            3L
 
+
+int __nocommandline=1; /* Disable commandline parsing  */
+int __initlibraries=0; /* Disable auto-library-opening */
+
+extern struct WBStartup *_WBenchMsg;
+
+//extern struct ExecBase      *SysBase;
 struct DosLibrary    *DOSBase       = NULL;
 struct IntuitionBase *IntuitionBase = NULL;
 struct UtilityBase   *UtilityBase   = NULL;
@@ -49,7 +59,19 @@ struct TagItem int2propmap[] =    /* This tells the string gadget */
     {TAG_END,}                    /* issues an update.            */
 };
 
-static void cleanexit(char *msg)
+static BPTR           astdout       = 0;
+
+void _debug_putc (char c)
+{
+    if (!astdout)
+        return;
+
+    char s[2] = {c, 0};
+
+    Write (astdout, s, 1);
+}
+
+void cleanexit(char *msg)
 {
     if (msg)
         DPRINTF (msg);
@@ -58,26 +80,26 @@ static void cleanexit(char *msg)
     if (prop)
         DisposeObject(prop);
     if (w)
-        CloseWindow(windowObject);
+        CloseWindow(w);
 
     if (DOSBase)
         CloseLibrary((struct Library*)DOSBase);
     if (IntuitionBase)
         CloseLibrary((struct Library*)IntuitionBase);
+#if 0
     if (WindowBase)
         CloseLibrary(WindowBase);
     if (LayoutBase)
         CloseLibrary(LayoutBase);
     if (ButtonBase)
         CloseLibrary(ButtonBase);
+#endif
 
     exit(0);
 }
 
 int main(void)
 {
-    BOOL done = FALSE;
-
     if ( !(DOSBase=(struct DosLibrary *)OpenLibrary((STRPTR)"dos.library", 37)) )
         cleanexit ("failed to open dos.library!\n");
     astdout = Output();
@@ -109,7 +131,7 @@ int main(void)
                                       GA_Width,  PROPGADGETWIDTH,
                                       GA_Height, PROPGADGETHEIGHT,
 
-                                      ICA_MAP,      prop2intmap, /* The prop gadget's attribute map */
+                                      ICA_MAP,      (LONG) prop2intmap, /* The prop gadget's attribute map */
 
                                       /* The rest of this gadget's attributes are defined by propgclass. */
                                       PGA_Total,     TOTAL,          /* This is the integer range of the prop gadget.  */
@@ -135,8 +157,8 @@ int main(void)
                                                        PROPGADGETWIDTH + 15L),
                                          GA_Height,  INTGADGETHEIGHT,
 
-                                         ICA_MAP,    int2propmap,           /* The attribute map */
-                                         ICA_TARGET, prop,                  /* plus the target.  */
+                                         ICA_MAP,    (LONG) int2propmap,           /* The attribute map */
+                                         ICA_TARGET, (LONG) prop,                  /* plus the target.  */
 
                                                  /* Th GA_Previous attribute is defined by gadgetclass and is used to */
                                                  /* wedge a new gadget into a list of gadget's linked by their        */
@@ -145,22 +167,25 @@ int main(void)
                                                  /* gadget. This attribute is a pointer to the previous gadget        */
                                                  /* (struct Gadget *).  This attribute cannot be used to link new     */
                                                  /* gadgetsinto the gadget list of an open window or requester,       */
-                                         GA_Previous, prop,  /* use AddGList() instead.                               */
+                                         GA_Previous, (LONG) prop,  /* use AddGList() instead.                               */
 
                                          STRINGA_LongVal,  INITIALVAL, /* These attributes are defined by strgclass.  */
                                          STRINGA_MaxChars, MAXCHARS,   /* The first contains the value of the         */
                                          TAG_END);                     /* integer string gadget. The second is the    */
                                                                        /* maximum number of characters the user is    */
                                                                        /* allowed to type into the gadget.            */
-    if (!integer) goto fail;
+    if (!integer)
+        cleanexit ("failed to create integer gadget object\n");
 
     SetGadgetAttrs(prop, w, NULL, /* Because the integer string gadget did not   */
-        ICA_TARGET, integer,      /* exist when this example created the prop    */
+        ICA_TARGET, (LONG) integer,      /* exist when this example created the prop    */
         TAG_END);                 /* gadget, it had to wait to set the           */
                                   /* ICA_Target of the prop gadget.              */
 
     AddGList(w, prop, -1, -1, NULL);  /* Add the gadgets to the                  */
     RefreshGList(prop, w, NULL, -1);  /* window and display them.                */
+
+    BOOL done = FALSE;
 
     while (done == FALSE)     /* Wait for the user to click */
     {                         /* the window close gadget.   */
@@ -173,6 +198,5 @@ int main(void)
         }
     }
     RemoveGList(w, prop, -1);
-
     cleanexit("all done. goodbye.\n");
 }

@@ -2,7 +2,7 @@ include ../../../config.mk
 
 CFLAGS_AMIGAOS2   = -O3 -march=68000 -mcpu=68000 -mcrt=nix20 -I$(SELF_DIR)/src/amigasupport
 
-SRCS = 	bitest.c
+SRCS = 	bitest.c dprintf.c
 
 OBJS_AMIGAOS := $(patsubst %,${OBJDIR_AMIGAOS}/%.o,$(basename $(SRCS)))
 
