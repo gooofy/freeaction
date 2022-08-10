@@ -14,10 +14,10 @@ clean:
 	rm -rf $(DEPDIR_AMIGAOS)
 
 $(OBJDIR_AMIGAOS)/%.o : %.c $(DEPDIR_AMIGAOS)/%.d | $(DEPDIR_AMIGAOS)
-	$(CC_AMIGAOS) -c -g $(CFLAGS_AMIGAOS) $(DEPFLAGS_AMIGAOS) $< -o $@
+	$(CC_AMIGAOS) -c -g $(CFLAGS_AMIGAOS2) $(DEPFLAGS_AMIGAOS) $< -o $@
 
 ${BINDIR_AMIGAOS}/bitest:	$(OBJS_AMIGAOS) $(SELF_DIR)/src/amigasupport/amigasupport.a
-	$(CC_AMIGAOS) -g $(CFLAGS_AMIGAOS) $(LDFLAGS_AMIGAOS) -o $@ $^ $(SELF_DIR)/src/amigasupport/amigasupport.a
+	$(CC_AMIGAOS) -g $(CFLAGS_AMIGAOS2) $(LDFLAGS_AMIGAOS) -o $@ $^ $(SELF_DIR)/src/amigasupport/amigasupport.a
 	# $(STRIP_AMIGAOS) $@
 	cp $@ $(EMUDIR)
 
@@ -32,5 +32,5 @@ diss: ${BINDIR_AMIGAOS}/bitest
 	$(OBJDUMP_AMIGAOS) -S -d -x ${BINDIR_AMIGAOS}/bitest
 
 %.asm: %.c
-	$(CC_AMIGAOS) -S $(CFLAGS_AMIGAOS) $< -o $@
+	$(CC_AMIGAOS) -S $(CFLAGS_AMIGAOS2) $< -o $@
 
