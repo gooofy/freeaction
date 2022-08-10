@@ -22,15 +22,11 @@
 #include <clib/graphics_protos.h>
 #include <inline/graphics.h>
 
-#define PROPGADGET_ID       1L
-#define PROPGADGETWIDTH     10L
-#define PROPGADGETHEIGHT    80L
 #define VISIBLE             10L
 #define TOTAL               100L
 #define INITIALVAL          25L
 #define MINWINDOWWIDTH      80
-#define MINWINDOWHEIGHT     (PROPGADGETHEIGHT + 70)
-#define MAXCHARS            3L
+#define MINWINDOWHEIGHT     30
 
 int __nocommandline=1; /* Disable commandline parsing  */
 int __initlibraries=0; /* Disable auto-library-opening */
@@ -81,11 +77,15 @@ void cleanexit(char *msg)
         CloseLibrary((struct Library*)DOSBase);
     if (IntuitionBase)
         CloseLibrary((struct Library*)IntuitionBase);
+    if (GfxBase)
+        CloseLibrary((struct Library*)GfxBase);
+    if (UtilityBase)
+        CloseLibrary((struct Library*)UtilityBase);
 
     exit(0);
 }
 
-static __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o, Msg msg)
+__saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o, Msg msg)
 {
     ULONG retval = 0;
 
@@ -139,10 +139,7 @@ static __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o,
         if (rp)
         {
             SetAPen(rp, 1);
-            RectFill(rp, g->LeftEdge,
-                         g->TopEdge,
-                         g->LeftEdge + g->Width,
-                         g->TopEdge + g->Height);
+            RectFill(rp, 10, 10, 20, 20);
 #if 0
             //DPRINTF ("_mybutton_dispatcher: GM_RENDER rp\n");
             UWORD back, shine, shadow, w, h, x, y;
@@ -255,26 +252,17 @@ int main(void)
         cleanexit("failed to open utility.library\n");
     DPRINTF ("utility.library opened\n");
 
+    if (! (GfxBase = (struct GfxBase*) OpenLibrary((STRPTR)"graphics.library", 37)))
+        cleanexit("failed to open graphics.library\n");
+    DPRINTF ("graphics.library opened\n");
+
     mybutton_class = init_mybutton_class();
     if (!mybutton_class)
         cleanexit("failed to init mybutton class\n");
 
-    w = OpenWindowTags(NULL,
-                       WA_Flags,       WFLG_DEPTHGADGET | WFLG_DRAGBAR |
-                                       WFLG_CLOSEGADGET | WFLG_SIZEGADGET,
-                       WA_IDCMP,       IDCMP_CLOSEWINDOW,
-                       WA_Width,       200,
-                       WA_Height,      75,
-                       WA_MinWidth,    MINWINDOWWIDTH,
-                       WA_MinHeight,   MINWINDOWHEIGHT,
-                       TAG_END);
-    if (!w)
-        cleanexit("failed to open the window\n");
-    DPRINTF ("window opened.");
-
     mybutton = NewObject (mybutton_class, NULL,
-                          GA_Top,         (w->BorderTop) + 5L,
-                          GA_Left,        (w->BorderLeft) + 5L,
+                          GA_Top,         5L,
+                          GA_Left,        5L,
                           GA_Width,       150,
                           GA_Height,      23,
                           GA_ID,          42,
@@ -286,8 +274,22 @@ int main(void)
         cleanexit ("failed to create mybutton gadget object\n");
     DPRINTF ("mybutton gadget object created.\n");
 
-    AddGList(w, mybutton, -1, -1, NULL);
-    RefreshGList(mybutton, w, NULL, -1);
+    w = OpenWindowTags(NULL,
+                       WA_Flags,       WFLG_DEPTHGADGET | WFLG_DRAGBAR |
+                                       WFLG_CLOSEGADGET | WFLG_SIZEGADGET,
+                       WA_IDCMP,       IDCMP_CLOSEWINDOW,
+                       WA_Width,       200,
+                       WA_Height,      75,
+                       WA_MinWidth,    MINWINDOWWIDTH,
+                       WA_MinHeight,   MINWINDOWHEIGHT,
+                       WA_Gadgets,     (LONG) mybutton,
+                       TAG_END);
+    if (!w)
+        cleanexit("failed to open the window\n");
+    DPRINTF ("window opened.");
+
+    //AddGList(w, mybutton, -1, -1, NULL);
+    //RefreshGList(mybutton, w, NULL, -1);
 
     BOOL done = FALSE;
 
@@ -301,6 +303,6 @@ int main(void)
             ReplyMsg((struct Message *)msg);
         }
     }
-    RemoveGList(w, mybutton, -1);
+    //RemoveGList(w, mybutton, -1);
     cleanexit("all done. goodbye.\n");
 }
