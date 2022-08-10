@@ -138,9 +138,6 @@ __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o, Msg ms
 
         if (rp)
         {
-            SetAPen(rp, 1);
-            RectFill(rp, 10, 10, 20, 20);
-#if 0
             //DPRINTF ("_mybutton_dispatcher: GM_RENDER rp\n");
             UWORD back, shine, shadow, w, h, x, y;
 
@@ -192,7 +189,6 @@ __saveds ULONG _mybutton_dispatcher (struct IClass *cl, struct Gadget *o, Msg ms
             Move(rp, g->LeftEdge, g->TopEdge + g->Height - 1);
             Draw(rp, g->LeftEdge, g->TopEdge);
             Draw(rp, g->LeftEdge + g->Width - 1, g->TopEdge);
-            #endif
         }
         //DPRINTF ("_mybutton_dispatcher: GM_RENDER fini\n");
         break;
@@ -261,10 +257,10 @@ int main(void)
         cleanexit("failed to init mybutton class\n");
 
     mybutton = NewObject (mybutton_class, NULL,
-                          GA_Top,         5L,
-                          GA_Left,        5L,
+                          GA_Top,         15,
+                          GA_Left,        5,
                           GA_Width,       150,
-                          GA_Height,      23,
+                          GA_Height,      15,
                           GA_ID,          42,
                           GA_RelVerify,   TRUE,
                           //GA_Previous,    (LONG) prop,
